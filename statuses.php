@@ -1,118 +1,103 @@
+// ОТЛАДКА: выводим параметры фильтра и запроса
+echo '<pre style="background:#222;color:#fff;z-index:9999;position:relative;">';
+echo "_GET: ";
+var_dump($_GET);
+echo "\nПараметры запроса к API: ";
+var_dump($params);
+echo '</pre>';
 <?php
-session_start();
 require_once 'api.php';
-
-$dateFrom = $_GET['dateFrom'] ?? date('Y-m-d', strtotime('-30 days'));
-$dateTo = $_GET['dateTo'] ?? date('Y-m-d');
-
-$leads = [];
-$error = '';
-
-// Отримуємо статуси лідів
-$result = getStatuses($dateFrom, $dateTo);
-
-if ($result['success']) {
-    $leads = $result['data'] ?? [];
-} else {
-    $error = 'Помилка при отриманні статусів: ' . $result['message'];
+$statuses = [];
+$date_from_default = date('Y-m-d', strtotime('-30 days')) . ' 00:00:00';
+$date_to_default = date('Y-m-d') . ' 23:59:59';
+$date_from = isset($_GET['date_from']) && $_GET['date_from'] ? str_replace('T', ' ', $_GET['date_from']) . ':00' : $date_from_default;
+$date_to = (isset($_GET['date_to']) && $_GET['date_to'] && strtotime($_GET['date_to'])) ? str_replace('T', ' ', $_GET['date_to']) . ':00' : $date_to_default;
+$page = 0;
+$limit = 100;
+$params = [
+    "date_from" => $date_from,
+    "date_to" => $date_to,
+    "page" => $page,
+    "limit" => $limit
+];
+$token = defined('API_TOKEN') ? API_TOKEN : 'ba67df6a-a17c-476f-8e95-bcdb75ed3958';
+$result = getStatuses($params, $token);
+if (!empty($result['status']) && $result['status'] === true && !empty($result['data'])) {
+    $statuses = json_decode($result['data'], true);
 }
 ?>
 <!DOCTYPE html>
-<html lang="uk">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Статуси Лідів</title>
+    <title>Статусы лидов</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <nav>
-        <a href="index.php">Додати лід</a>
-        <a href="statuses.php" class="active">Статуси лідів</a>
+        <a href="index.php">Добавить лид</a>
+        <a href="statuses.php" class="active">Статусы лидов</a>
     </nav>
-    
     <div class="container">
-        <h1>Статуси лідів</h1>
-        
-        <?php if ($error): ?>
-            <div class="alert alert-error"><?= htmlspecialchars($error) ?></div>
-        <?php endif; ?>
-        
-        <form method="GET" action="" class="filter-form">
-            <div class="form-group">
-                <label for="dateFrom">Дата від</label>
-                <input type="date" id="dateFrom" name="dateFrom" 
-                       value="<?= htmlspecialchars($dateFrom) ?>">
+        <h1>Статусы лидов</h1>
+        <details style="margin-bottom:16px; background:#222; color:#fff; padding:10px; border-radius:8px;">
+            <summary style="cursor:pointer; color:#ffb86c;">Показать raw-ответ API (отладка)</summary>
+            <pre style="white-space:pre-wrap; color:#fff; background:#222; padding:8px; border-radius:6px; font-size:13px; max-height:300px; overflow:auto;">
+<?= htmlspecialchars(print_r($result, true)) ?>
+            </pre>
+        </details>
+        <form method="GET" class="filter-form" style="display: flex; gap: 24px; align-items: flex-end; margin-bottom: 32px; flex-wrap: wrap;">
+            <div style="display: flex; flex-direction: column;">
+                <label for="date_from" style="margin-bottom: 6px; color: #ffb86c; font-weight: bold;">Дата с:</label>
+                <input type="datetime-local" name="date_from" id="date_from" placeholder="Выберите дату" value="<?= htmlspecialchars(str_replace(' ', 'T', substr($date_from, 0, 16))) ?>" style="padding: 8px 12px; border-radius: 8px; border: 1px solid #444; background: #222; color: #fff; font-size: 1rem;">
             </div>
-            
-            <div class="form-group">
-                <label for="dateTo">Дата до</label>
-                <input type="date" id="dateTo" name="dateTo" 
-                       value="<?= htmlspecialchars($dateTo) ?>">
+            <div style="display: flex; flex-direction: column;">
+                <label for="date_to" style="margin-bottom: 6px; color: #ffb86c; font-weight: bold;">Дата по:</label>
+                <input type="datetime-local" name="date_to" id="date_to" placeholder="Выберите дату" value="<?= htmlspecialchars(str_replace(' ', 'T', substr($date_to, 0, 16))) ?>" style="padding: 8px 12px; border-radius: 8px; border: 1px solid #444; background: #222; color: #fff; font-size: 1rem;">
             </div>
-            
-            <button type="submit" class="btn">Фільтрувати</button>
+            <button type="submit" class="btn" style="height: 40px; min-width: 140px; font-size: 1rem;">Фильтровать</button>
         </form>
-        
-        <div class="table-container">
-            <table>
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Email</th>
-                        <th>Status</th>
-                        <th>FTD</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php if (empty($leads)): ?>
+        <table class="statuses-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Email</th>
+                    <th>Status</th>
+                    <th>FTD</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php if ($statuses): ?>
+                    <?php foreach ($statuses as $lead): ?>
                         <tr>
-                            <td colspan="4" class="text-center">Лідів не знайдено</td>
+                            <td><?= htmlspecialchars($lead['id'] ?? '') ?></td>
+                            <td><?= htmlspecialchars($lead['email'] ?? '') ?></td>
+                            <td><?= htmlspecialchars($lead['status'] ?? '') ?></td>
+                            <td><?= htmlspecialchars($lead['ftd'] ?? '') ?></td>
                         </tr>
-                    <?php else: ?>
-                        <?php foreach ($leads as $lead): ?>
-                            <tr>
-                                <td><?= htmlspecialchars($lead['id'] ?? 'N/A') ?></td>
-                                <td><?= htmlspecialchars($lead['email'] ?? 'N/A') ?></td>
-                                <td>
-                                    <span class="status-badge status-<?= strtolower($lead['status'] ?? 'unknown') ?>">
-                                        <?= htmlspecialchars($lead['status'] ?? 'Unknown') ?>
-                                    </span>
-                                </td>
-                                <td><?= htmlspecialchars($lead['ftd'] ?? 'N/A') ?></td>
-                            </tr>
-                        <?php endforeach; ?>
-                    <?php endif; ?>
-                </tbody>
-            </table>
-        </div>
-        
-        <div class="info">
-            <p>Всього лідів: <strong><?= count($leads) ?></strong></p>
-            <p>Період: <strong><?= htmlspecialchars($dateFrom) ?></strong> - <strong><?= htmlspecialchars($dateTo) ?></strong></p>
-        </div>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <tr><td colspan="4">Нет данных</td></tr>
+                <?php endif; ?>
+            </tbody>
+        </table>
     </div>
-    
+    </div>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             setTimeout(() => {
                 document.querySelector('.container').classList.add('page-loaded');
             }, 100);
-            
             const links = document.querySelectorAll('nav a');
             links.forEach(link => {
                 link.addEventListener('click', function(e) {
-                    if (this.href.includes('index.php') || (!this.href.includes('statuses.php') && !this.href.includes('index.php'))) {
+                    if (this.href.includes('index.php')) {
                         e.preventDefault();
-                        
-                        // Добавляєм morphing ефект до кнопки
                         this.classList.add('morphing');
-                        
-                        // Зникання контейнера
                         document.querySelector('.container').classList.add('page-exit');
-                        
                         setTimeout(() => {
-                            window.location.href = this.href.includes('index.php') ? this.href : 'index.php';
+                            window.location.href = this.href;
                         }, 600);
                     }
                 });

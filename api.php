@@ -3,9 +3,9 @@
  * API конфігурація
  */
 // УВАГА: Замініть на реальний URL з документації!
-define('API_BASE_URL', 'DEMO_MODE'); // Поки що DEMO режим
+define('API_BASE_URL', 'https://crm.belmar.pro/api/v1'); // Реальный URL из документации
 define('API_TOKEN', 'ba67df6a-a17c-476f-8e95-bcdb75ed3958');
-define('USE_DEMO_MODE', true); // Встановіть false для використання реального API
+define('USE_DEMO_MODE', false); // Использовать реальный API
 
 /**
  * Виконує HTTP запит до API
@@ -25,15 +25,16 @@ function makeApiRequest($method, $endpoint, $data = []) {
     $ch = curl_init();
     
     $headers = [
-        'Authorization: Bearer ' . API_TOKEN,
+        'token: ' . API_TOKEN,
         'Content-Type: application/json',
         'Accept: application/json'
     ];
-    
+
     curl_setopt($ch, CURLOPT_URL, $url);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
     curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
+    curl_setopt($ch, CURLOPT_CAINFO, 'C:/php/extras/ssl/cacert.pem');
     curl_setopt($ch, CURLOPT_TIMEOUT, 30);
     
     if ($method === 'POST') {
@@ -86,19 +87,23 @@ function addLead($leadData) {
 }
 
 /**
- * Отримує статуси лідів через API метод "getstatuses"
- * 
- * @param string $dateFrom Дата від (формат: Y-m-d)
- * @param string $dateTo Дата до (формат: Y-m-d)
- * @return array Результат запиту
+ * Получает статусы лидов через API метод "getstatuses"
+ * @param array $params Массив параметров фильтра
+ * @param string|null $token Токен (опционально)
+ * @return array Результат запроса
  */
-function getStatuses($dateFrom, $dateTo) {
-    $params = [
-        'dateFrom' => $dateFrom,
-        'dateTo' => $dateTo
-    ];
-    
-    return makeApiRequest('GET', '/getstatuses', $params);
+function getStatuses($params, $token = null) {
+    // Если передан токен, временно переопределяем
+    if ($token) {
+        $oldToken = defined('API_TOKEN') ? API_TOKEN : null;
+        define('API_TOKEN', $token);
+    }
+    $result = makeApiRequest('POST', '/getstatuses', $params);
+    // Возвращаем старый токен, если был
+    if (isset($oldToken)) {
+        define('API_TOKEN', $oldToken);
+    }
+    return $result;
 }
 
 /**
