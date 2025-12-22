@@ -103,5 +103,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <button type="submit" class="btn">Відправити</button>
         </form>
     </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(() => {
+                document.querySelector('.container').classList.add('page-loaded');
+            }, 100);
+            
+            const links = document.querySelectorAll('nav a');
+            links.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    if (this.href.includes('statuses.php')) {
+                        e.preventDefault();
+                        
+                        // Добавляєм morphing ефект до кнопки
+                        this.classList.add('morphing');
+                        
+                        // Зникання контейнера
+                        document.querySelector('.container').classList.add('page-exit');
+                        
+                        setTimeout(() => {
+                            window.location.href = this.href;
+                        }, 600);
+                    }
+                });
+            });
+        });
+    </script>
 </body>
 </html>

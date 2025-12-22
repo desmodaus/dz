@@ -77,9 +77,32 @@ nav a {
     font-size: 16px;
     padding: 15px 30px;
     border-radius: 40px;
-    transition: all 0.3s ease;
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
     background: transparent;
     text-shadow: 0 0 10px rgba(247, 147, 26, 0.5);
+    position: relative;
+    overflow: hidden;
+}
+
+nav a::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 25px;
+    background: linear-gradient(135deg, #f7931a, #627eea);
+    transform: translate(-50%, -50%);
+    transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: -1;
+    opacity: 0;
+}
+
+nav a.morphing::before {
+    width: 2000px;
+    height: 2000px;
+    opacity: 1;
 }
 
 nav a:hover {
@@ -103,10 +126,24 @@ nav a.active {
     border-radius: 25px;
     padding: 45px 50px;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 50px rgba(247, 147, 26, 0.2);
-    animation: fadeIn 0.8s ease;
     border: 2px solid rgba(247, 147, 26, 0.3);
     position: relative;
     z-index: 10;
+    opacity: 0;
+    transform: scale(0.8);
+    transform-origin: center top;
+    transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.container.page-loaded {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.container.page-exit {
+    opacity: 0;
+    transform: scale(0.8);
+    transition: all 0.4s cubic-bezier(0.4, 0, 1, 1);
 }
 
 h1 {
@@ -246,10 +283,15 @@ input:focus, textarea:focus, select:focus {
     padding: 25px;
     background: linear-gradient(135deg, rgba(247, 147, 26, 0.1), rgba(98, 126, 234, 0.1));
     border-radius: 15px;
-    display: flex;
-    gap: 15px;
+    display: grid;
+    grid-template-columns: 1fr 1fr auto;
+    gap: 20px;
     align-items: end;
     border: 1px solid rgba(247, 147, 26, 0.3);
+}
+
+.filter-form .form-group {
+    margin-bottom: 0;
 }
 
 .table-container {
@@ -364,23 +406,144 @@ tbody tr:hover {
 
 @media (max-width: 768px) {
     body {
-        padding: 20px 15px;
+        padding: 15px 10px;
+    }
+    
+    nav {
+        flex-direction: row;
+        padding: 8px;
+        gap: 8px;
+    }
+    
+    nav a {
+        font-size: 14px;
+        padding: 12px 20px;
     }
     
     .container {
-        padding: 30px 25px;
+        padding: 25px 20px;
+        border-radius: 20px;
     }
     
     h1 {
-        font-size: 2rem;
+        font-size: 1.8rem;
+        margin-bottom: 30px;
+    }
+    
+    h1::after {
+        font-size: 0.9rem;
+        bottom: -15px;
+    }
+    
+    h2 {
+        font-size: 1.5rem;
     }
     
     .filter-form {
-        flex-direction: column;
+        grid-template-columns: 1fr;
+        gap: 20px;
+        padding: 20px;
+    }
+    
+    .filter-form .btn {
+        margin-top: 10px;
+    }
+    
+    .table-container {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    table {
+        min-width: 600px;
+        font-size: 14px;
+    }
+    
+    th, td {
+        padding: 12px 10px;
+        font-size: 0.85rem;
+    }
+    
+    .status-badge {
+        padding: 4px 10px;
+        font-size: 0.75rem;
     }
     
     .info {
         flex-direction: column;
-        gap: 10px;
+        gap: 15px;
+        text-align: center;
+    }
+    
+    .info p {
+        font-size: 0.95rem;
+    }
+    
+    body::before,
+    body::after {
+        font-size: 100px;
+        opacity: 0.03;
+    }
+}
+
+@media (max-width: 480px) {
+    body {
+        padding: 10px 5px;
+    }
+    
+    nav {
+        padding: 6px;
+        gap: 6px;
+        border-radius: 35px;
+    }
+    
+    nav a {
+        font-size: 13px;
+        padding: 10px 15px;
+    }
+    
+    .container {
+        padding: 20px 15px;
+    }
+    
+    h1 {
+        font-size: 1.5rem;
+    }
+    
+    h2 {
+        font-size: 1.3rem;
+    }
+    
+    .filter-form {
+        padding: 15px;
+    }
+    
+    label {
+        font-size: 0.9rem;
+    }
+    
+    input[type="text"],
+    input[type="email"],
+    input[type="tel"],
+    input[type="date"],
+    textarea,
+    select {
+        padding: 12px 15px;
+        font-size: 0.95rem;
+    }
+    
+    .btn {
+        padding: 12px 25px;
+        font-size: 1rem;
+    }
+    
+    table {
+        min-width: 550px;
+        font-size: 13px;
+    }
+    
+    th, td {
+        padding: 10px 8px;
+        font-size: 0.8rem;
     }
 }

@@ -92,5 +92,32 @@ if ($result['success']) {
             <p>Період: <strong><?= htmlspecialchars($dateFrom) ?></strong> - <strong><?= htmlspecialchars($dateTo) ?></strong></p>
         </div>
     </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(() => {
+                document.querySelector('.container').classList.add('page-loaded');
+            }, 100);
+            
+            const links = document.querySelectorAll('nav a');
+            links.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    if (this.href.includes('index.php') || (!this.href.includes('statuses.php') && !this.href.includes('index.php'))) {
+                        e.preventDefault();
+                        
+                        // Добавляєм morphing ефект до кнопки
+                        this.classList.add('morphing');
+                        
+                        // Зникання контейнера
+                        document.querySelector('.container').classList.add('page-exit');
+                        
+                        setTimeout(() => {
+                            window.location.href = this.href.includes('index.php') ? this.href : 'index.php';
+                        }, 600);
+                    }
+                });
+            });
+        });
+    </script>
 </body>
 </html>
