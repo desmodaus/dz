@@ -15,17 +15,17 @@ define('USE_DEMO_MODE', false); // Использовать реальный API
  * @param array $data Дані для відправки
  * @return array Результат запиту
  */
-function makeApiRequest($method, $endpoint, $data = []) {
-    // DEMO режим для тестування без реального API
+function makeApiRequest($method, $endpoint, $data = [], $token = null) {
+    // DEMO режим для тестирования без реального API
     if (USE_DEMO_MODE) {
         return makeDemoApiRequest($method, $endpoint, $data);
     }
     $url = API_BASE_URL . $endpoint;
-    
+
     $ch = curl_init();
-    
+
     $headers = [
-        'token: ' . API_TOKEN,
+        'token: ' . ($token ?? API_TOKEN),
         'Content-Type: application/json',
         'Accept: application/json'
     ];
@@ -36,7 +36,7 @@ function makeApiRequest($method, $endpoint, $data = []) {
     curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
     curl_setopt($ch, CURLOPT_CAINFO, 'C:/php/extras/ssl/cacert.pem');
     curl_setopt($ch, CURLOPT_TIMEOUT, 30);
-    
+
     if ($method === 'POST') {
         curl_setopt($ch, CURLOPT_POST, true);
         curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
@@ -44,13 +44,13 @@ function makeApiRequest($method, $endpoint, $data = []) {
         $url .= '?' . http_build_query($data);
         curl_setopt($ch, CURLOPT_URL, $url);
     }
-    
+
     $response = curl_exec($ch);
     $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
     $error = curl_error($ch);
-    
+
     curl_close($ch);
-    
+
     if ($error) {
         return [
             'success' => false,
@@ -58,22 +58,10 @@ function makeApiRequest($method, $endpoint, $data = []) {
             'data' => null
         ];
     }
-    
+
     $decodedResponse = json_decode($response, true);
-    
-    if ($httpCode >= 200 && $httpCode < 300) {
-        return [
-            'success' => true,
-            'message' => 'Success',
-            'data' => $decodedResponse
-        ];
-    } else {
-        return [
-            'success' => false,
-            'message' => $decodedResponse['message'] ?? 'API Error: HTTP ' . $httpCode,
-            'data' => $decodedResponse
-        ];
-    }
+
+    return $decodedResponse;
 }
 
 /**
@@ -93,17 +81,7 @@ function addLead($leadData) {
  * @return array Результат запроса
  */
 function getStatuses($params, $token = null) {
-    // Если передан токен, временно переопределяем
-    if ($token) {
-        $oldToken = defined('API_TOKEN') ? API_TOKEN : null;
-        define('API_TOKEN', $token);
-    }
-    $result = makeApiRequest('POST', '/getstatuses', $params);
-    // Возвращаем старый токен, если был
-    if (isset($oldToken)) {
-        define('API_TOKEN', $oldToken);
-    }
-    return $result;
+    return makeApiRequest('POST', '/getstatuses', $params, $token);
 }
 
 /**
@@ -127,23 +105,45 @@ function makeDemoApiRequest($method, $endpoint, $data = []) {
         ];
     }
     
-    if ($endpoint === '/getstatuses' && $method === 'GET') {
-        // Симуляція отримання статусів лідів
-        $demoLeads = [];
-        $statuses = ['new', 'pending', 'approved', 'rejected', 'contacted'];
-        $ftdValues = ['Yes', 'No', 'Pending', 'N/A'];
-        
-        // Генеруємо тестові дані
-        for ($i = 1; $i <= 10; $i++) {
-            $demoLeads[] = [
-                'id' => 1000 + $i,
-                'email' => 'test' . $i . '@example.com',
-                'status' => $statuses[array_rand($statuses)],
-                'ftd' => $ftdValues[array_rand($ftdValues)],
-                'created_at' => date('Y-m-d H:i:s', strtotime('-' . rand(1, 30) . ' days'))
-            ];
-        }
-        
+    if ($endpoint === '/getstatuses' && ($method === 'GET' || $method === 'POST')) {
+        // Симуляция получения статусов лидов с заполненными статусами и ftd
+        $demoLeads = [
+            [
+                'id' => 1001,
+                'email' => 'lead1@example.com',
+                'status' => 'new',
+                'ftd' => 'Yes',
+                'created_at' => date('Y-m-d H:i:s', strtotime('-1 days'))
+            ],
+            [
+                'id' => 1002,
+                'email' => 'lead2@example.com',
+                'status' => 'approved',
+                'ftd' => 'No',
+                'created_at' => date('Y-m-d H:i:s', strtotime('-2 days'))
+            ],
+            [
+                'id' => 1003,
+                'email' => 'lead3@example.com',
+                'status' => 'pending',
+                'ftd' => 'Pending',
+                'created_at' => date('Y-m-d H:i:s', strtotime('-3 days'))
+            ],
+            [
+                'id' => 1004,
+                'email' => 'lead4@example.com',
+                'status' => 'rejected',
+                'ftd' => 'N/A',
+                'created_at' => date('Y-m-d H:i:s', strtotime('-4 days'))
+            ],
+            [
+                'id' => 1005,
+                'email' => 'lead5@example.com',
+                'status' => 'contacted',
+                'ftd' => 'Yes',
+                'created_at' => date('Y-m-d H:i:s', strtotime('-5 days'))
+            ]
+        ];
         return [
             'success' => true,
             'message' => 'Statuses retrieved successfully',

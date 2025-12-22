@@ -1,10 +1,4 @@
-// ОТЛАДКА: выводим параметры фильтра и запроса
-echo '<pre style="background:#222;color:#fff;z-index:9999;position:relative;">';
-echo "_GET: ";
-var_dump($_GET);
-echo "\nПараметры запроса к API: ";
-var_dump($params);
-echo '</pre>';
+
 <?php
 require_once 'api.php';
 $statuses = [];
@@ -23,7 +17,12 @@ $params = [
 $token = defined('API_TOKEN') ? API_TOKEN : 'ba67df6a-a17c-476f-8e95-bcdb75ed3958';
 $result = getStatuses($params, $token);
 if (!empty($result['status']) && $result['status'] === true && !empty($result['data'])) {
-    $statuses = json_decode($result['data'], true);
+    // Если data — строка (как в документации), декодируем, иначе используем как массив
+    if (is_string($result['data'])) {
+        $statuses = json_decode($result['data'], true);
+    } elseif (is_array($result['data'])) {
+        $statuses = $result['data'];
+    }
 }
 ?>
 <!DOCTYPE html>
@@ -41,12 +40,7 @@ if (!empty($result['status']) && $result['status'] === true && !empty($result['d
     </nav>
     <div class="container">
         <h1>Статусы лидов</h1>
-        <details style="margin-bottom:16px; background:#222; color:#fff; padding:10px; border-radius:8px;">
-            <summary style="cursor:pointer; color:#ffb86c;">Показать raw-ответ API (отладка)</summary>
-            <pre style="white-space:pre-wrap; color:#fff; background:#222; padding:8px; border-radius:6px; font-size:13px; max-height:300px; overflow:auto;">
-<?= htmlspecialchars(print_r($result, true)) ?>
-            </pre>
-        </details>
+        <!-- raw-ответ API (отладка) удалён -->
         <form method="GET" class="filter-form" style="display: flex; gap: 24px; align-items: flex-end; margin-bottom: 32px; flex-wrap: wrap;">
             <div style="display: flex; flex-direction: column;">
                 <label for="date_from" style="margin-bottom: 6px; color: #ffb86c; font-weight: bold;">Дата с:</label>

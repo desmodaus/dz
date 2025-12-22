@@ -21,53 +21,38 @@ $token = 'ba67df6a-a17c-476f-8e95-bcdb75ed3958';
             $ip = $_SERVER['HTTP_CLIENT_IP'] ?? $_SERVER['HTTP_X_FORWARDED_FOR'] ?? $_SERVER['REMOTE_ADDR'];
             $landingUrl = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://" . $_SERVER['HTTP_HOST'];
             $leadData = [
-                "firstName" => $firstName,
-                "lastName" => $lastName,
-                "phone" => $phone,
-                "email" => $email,
-                "countryCode" => "GB",
-                "box_id" => 28,
-                "offer_id" => 5,
-                "landingUrl" => $landingUrl,
-                "ip" => $ip,
-                "password" => "qwerty12",
-                "language" => "en",
-                "clickId" => "",
-                "quizAnswers" => "",
-                "custom1" => "",
-                "custom2" => "",
-                "custom3" => ""
+                "firstName"   => $firstName,
+                "lastName"    => $lastName,
+                "email"       => $email,
+                "countryCode" => "GB", // ISO 3166 Alpha-2
+                "box_id"      => 28,
+                "offer_id"    => 5,
+                 "phone"       => preg_replace('/[^0-9]/', '', $phone),
+                 "landingUrl"  => "https://example.com", // временно для теста
+                 "ip"          => "8.8.8.8", // временно для теста
+                 "password"    => "qwerty12",
+                 "language"    => "en",
+                 "clickId"     => "",
+                 "quizAnswers" => "",
+                 "custom1"     => "",
+                 "custom2"     => "",
+                 "custom3"     => ""
             ];
             // Логируем отправляемые данные и ответ API
             $debug_leadData = $leadData;
             $result = addLead($leadData);
             $debug_apiResult = $result;
-            if (!empty($result['success']) && $result['success'] === true) {
-                $message = 'Лид успешно отправлен! ID: ' . ($result['data']['id'] ?? 'N/A');
+            if ((isset($result['status']) && $result['status'] == 1) || (isset($result['success']) && $result['success'] === true)) {
+                $message = 'Лид успешно отправлен! ID: ' . ($result['id'] ?? $result['data']['id'] ?? 'N/A');
             } else {
-                $error = 'Ошибка: ' . ($result['message'] ?? 'Не удалось отправить лид');
+                $error = 'Ошибка: ' . ($result['error'] ?? $result['message'] ?? 'Не удалось отправить лид');
             }
         }
     }
             // Closing PHP tag removed to avoid unnecessary output
 
     ?>
-    <!-- Отладочная информация по отправке лида -->
-    <details style="margin:16px 0; background:#222; color:#fff; padding:10px; border-radius:8px;">
-        <summary style="cursor:pointer; color:#ffb86c;">Показать debug-данные отправки лида</summary>
-        <div style="margin-bottom:10px;">
-            <strong>Отправленные данные:</strong>
-            <pre style="white-space:pre-wrap; color:#fff; background:#222; padding:8px; border-radius:6px; font-size:13px; max-height:300px; overflow:auto;">
-<?= htmlspecialchars(print_r($debug_leadData ?? [], true)) ?>
-            </pre>
-        </div>
-        <div>
-            <strong>Ответ API:</strong>
-            <pre style="white-space:pre-wrap; color:#fff; background:#222; padding:8px; border-radius:6px; font-size:13px; max-height:300px; overflow:auto;">
-<?= htmlspecialchars(print_r($debug_apiResult ?? [], true)) ?>
-            </pre>
-        </div>
-    </details>
+    <!-- debug-вывод скрыт -->
     <!DOCTYPE html>
     <html lang="en">
     <head>
