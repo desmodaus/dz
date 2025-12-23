@@ -34,7 +34,6 @@ function makeApiRequest($method, $endpoint, $data = [], $token = null) {
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
     curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
-    curl_setopt($ch, CURLOPT_CAINFO, 'C:/php/extras/ssl/cacert.pem');
     curl_setopt($ch, CURLOPT_TIMEOUT, 30);
 
     if ($method === 'POST') {
